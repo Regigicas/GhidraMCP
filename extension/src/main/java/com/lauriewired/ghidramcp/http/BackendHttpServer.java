@@ -51,7 +51,7 @@ public final class BackendHttpServer {
 
 	public BackendHttpServer(ProgramProvider provider) {
 		this.provider = provider;
-		this.service = new GhidraAnalysisService(provider::runWrite);
+		this.service = new GhidraAnalysisService(provider::runWrite, provider::getDecompileOptions);
 		registerRoutes();
 	}
 

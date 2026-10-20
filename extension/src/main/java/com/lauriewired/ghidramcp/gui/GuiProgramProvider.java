@@ -10,10 +10,13 @@ import javax.swing.SwingUtilities;
 import com.lauriewired.ghidramcp.core.McpException;
 import com.lauriewired.ghidramcp.core.ProgramProvider;
 
+import ghidra.GhidraOptions;
+import ghidra.app.decompiler.DecompileOptions;
 import ghidra.app.services.CodeViewerService;
 import ghidra.app.services.DataTypeManagerService;
 import ghidra.app.services.DataTypeQueryService;
 import ghidra.app.services.ProgramManager;
+import ghidra.framework.options.ToolOptions;
 import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.listing.Program;
@@ -23,6 +26,9 @@ import ghidra.program.util.ProgramLocation;
  * Targets the program that is active in the Ghidra tool. Writes run on the Swing thread.
  */
 public class GuiProgramProvider implements ProgramProvider {
+
+	/** Options category of the Decompiler plugin. */
+	private static final String DECOMPILER_OPTIONS = "Decompiler";
 
 	private final PluginTool tool;
 
@@ -62,6 +68,19 @@ public class GuiProgramProvider implements ProgramProvider {
 	@Override
 	public DataTypeQueryService getDataTypeService() {
 		return tool.getService(DataTypeManagerService.class);
+	}
+
+	/**
+	 * Uses the same options as the tool's Decompiler window (for example "Respect Read-only
+	 * Flags"), so results match what the user sees in the GUI.
+	 */
+	@Override
+	public DecompileOptions getDecompileOptions(Program program) {
+		DecompileOptions options = new DecompileOptions();
+		ToolOptions fieldOptions = tool.getOptions(GhidraOptions.CATEGORY_BROWSER_FIELDS);
+		ToolOptions decompilerOptions = tool.getOptions(DECOMPILER_OPTIONS);
+		options.grabFromToolAndProgram(fieldOptions, decompilerOptions, program);
+		return options;
 	}
 
 	@Override

@@ -13,6 +13,7 @@ import com.lauriewired.ghidramcp.core.Model.*;
 import ghidra.app.cmd.function.ApplyFunctionSignatureCmd;
 import ghidra.app.cmd.function.FunctionRenameOption;
 import ghidra.app.decompiler.DecompInterface;
+import ghidra.app.decompiler.DecompileOptions;
 import ghidra.app.decompiler.DecompileResults;
 import ghidra.app.services.DataTypeQueryService;
 import ghidra.app.util.parser.FunctionSignatureParser;
@@ -73,10 +74,19 @@ public class GhidraAnalysisService {
 		T apply(DecompileResults results);
 	}
 
-	private final WriteExecutor writeExecutor;
+	/** Supplies the decompiler options to use for a program. */
+	@FunctionalInterface
+	public interface DecompileOptionsSource {
+		DecompileOptions forProgram(Program program);
+	}
 
-	public GhidraAnalysisService(WriteExecutor writeExecutor) {
+	private final WriteExecutor writeExecutor;
+	private final DecompileOptionsSource decompileOptions;
+
+	public GhidraAnalysisService(WriteExecutor writeExecutor,
+			DecompileOptionsSource decompileOptions) {
 		this.writeExecutor = writeExecutor;
+		this.decompileOptions = decompileOptions;
 	}
 
 	// ------------------------------------------------------------------------------------------
@@ -708,10 +718,11 @@ public class GhidraAnalysisService {
 		});
 	}
 
-	private static <T> T withDecompiler(Program program, Function f, TaskMonitor monitor,
+	private <T> T withDecompiler(Program program, Function f, TaskMonitor monitor,
 			DecompiledAction<T> action) {
 		DecompInterface decomp = new DecompInterface();
 		try {
+			decomp.setOptions(decompileOptions.forProgram(program));
 			if (!decomp.openProgram(program)) {
 				throw McpException.decompileFailed(
 					"Decompiler could not open program: " + decomp.getLastMessage());

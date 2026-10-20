@@ -3,6 +3,7 @@ package com.lauriewired.ghidramcp.core;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import ghidra.app.decompiler.DecompileOptions;
 import ghidra.app.services.DataTypeQueryService;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.listing.Program;
@@ -31,6 +32,16 @@ public interface ProgramProvider {
 	/** @return a data type service for type lookups, or null if none is available */
 	default DataTypeQueryService getDataTypeService() {
 		return null;
+	}
+
+	/**
+	 * @return the decompiler options to use for the program. The default takes only the
+	 *         program's own settings; the GUI also applies the tool's Decompiler options.
+	 */
+	default DecompileOptions getDecompileOptions(Program program) {
+		DecompileOptions options = new DecompileOptions();
+		options.grabFromProgram(program);
+		return options;
 	}
 
 	/**
